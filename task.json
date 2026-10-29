@@ -1,0 +1,65 @@
+{
+  "atomCode": "artifact-size",
+  "name": "Artifact size",
+  "version": "1.0.0",
+  "description": "Sums what the build produced, shows the largest files, and can gate on a budget.",
+  "execution": {
+    "packagePath": "artifact-size.jar",
+    "language": "java",
+    "target": "$atom_java_path -cp artifact-size.jar com.jenkinschina.atom.sdk.AtomRunner"
+  },
+  "input": {
+    "pattern": {
+      "label": "产物 glob（逗号分隔）",
+      "type": "vuex-input",
+      "default": "**/*.jar, **/*.war, **/*.zip, **/*.tar.gz"
+    },
+    "outputDir": {
+      "label": "HTML 输出目录",
+      "type": "vuex-input",
+      "default": "out/artifact-size"
+    },
+    "maxMb": {
+      "label": "总大小上限（MB，0 = 不检查）",
+      "type": "vuex-input",
+      "default": "0"
+    },
+    "topN": {
+      "label": "表格显示前 N 个",
+      "type": "vuex-input-number",
+      "default": "20"
+    }
+  },
+  "output": {
+    "files": {
+      "type": "string",
+      "description": "文件数"
+    },
+    "totalBytes": {
+      "type": "string",
+      "description": "总字节"
+    },
+    "totalHuman": {
+      "type": "string",
+      "description": "人类可读总量"
+    },
+    "totalMb": {
+      "type": "string",
+      "description": "总 MB"
+    },
+    "largest": {
+      "type": "string",
+      "description": "最大文件"
+    },
+    "report": {
+      "type": "report",
+      "description": "构建页内嵌报告"
+    }
+  },
+  "x-jenkins": {
+    "protocol": "jenkins-1",
+    "requires": {
+      "runner": ">=0.4.0"
+    }
+  }
+}

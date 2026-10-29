@@ -1,0 +1,11 @@
+{
+  "name": "Artifact size",
+  "summary": "Sums what the build produced, shows the largest files, and can gate on a budget.",
+  "author": "hummerstudio",
+  "license": "MIT",
+  "tags": [
+    "official-port",
+    "artifact-size"
+  ],
+  "homepage": "https://github.com/hummerstudio/jenkins-atom-artifact-size"
+}
