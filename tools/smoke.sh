@@ -32,4 +32,11 @@ printf '{"pattern": "dist/*.jar"}' >"$dir/input.json"
 run "$dir" >/dev/null 2>&1 && fail "no artifacts must fail"
 grep -q "nothing matched" "$dir/output.json" || fail "message not readable"
 
+# **/ must match zero directories: a jar directly in a subdirectory, no level in between
+dir="$(mktemp -d)"; mkdir -p "$dir/libs"
+printf 'x' >"$dir/libs/a.jar"
+printf '{"pattern": "libs/**/*.jar"}' >"$dir/input.json"
+run "$dir" >/dev/null 2>&1 || fail "zero-directory glob: $(cat "$dir/output.json")"
+[ "$(output "$dir" files)" = "1" ] || fail "libs/**/*.jar must find libs/a.jar: $(cat "$dir/output.json")"
+
 echo "smoke ok: totals, largest, budget gate, nothing matched"

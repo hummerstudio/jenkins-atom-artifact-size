@@ -4,12 +4,11 @@ import com.jenkinschina.atom.sdk.AtomContext;
 import com.jenkinschina.atom.sdk.AtomResult;
 import com.jenkinschina.atom.sdk.AtomTask;
 import com.jenkinschina.atom.sdk.ErrorType;
+import com.jenkinschina.atom.sdk.Glob;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.PathMatcher;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -31,23 +30,21 @@ public class ArtifactSizeAtom implements AtomTask {
         double maxMb = toDouble(context.getParam("maxMb", "0"), 0);
         int topN = Math.max(1, Math.min(context.getIntParam("topN", 20), 200));
 
-        List<PathMatcher> matchers = matchers(pattern);
-        if (matchers.isEmpty()) {
+        if (pattern.isBlank()) {
             return AtomResult.error(ErrorType.USER, 40001, "pattern is required");
         }
 
         List<Entry> entries = new ArrayList<>();
-        try (var walk = Files.walk(workspace, 14)) {
-            walk.filter(Files::isRegularFile)
-                    .filter(path -> !path.toString().contains("/out/artifact-size/"))
-                    .filter(path -> matches(workspace, path, matchers))
-                    .forEach(path -> {
-                        try {
-                            entries.add(new Entry(workspace.relativize(path).toString(), Files.size(path)));
-                        } catch (IOException ignored) {
-                            // the file disappeared while we walked
-                        }
-                    });
+        // Glob from the SDK: **/ means zero or more directories, the way Ant and Jenkins read it
+        for (Path path : Glob.find(workspace, pattern)) {
+            if (path.toString().contains("/out/artifact-size/")) {
+                continue;
+            }
+            try {
+                entries.add(new Entry(workspace.relativize(path).toString(), Files.size(path)));
+            } catch (IOException ignored) {
+                // the file disappeared between the walk and the read
+            }
         }
         if (entries.isEmpty()) {
             return AtomResult.error(ErrorType.USER, 40002, "nothing matched " + pattern);
@@ -81,28 +78,6 @@ public class ArtifactSizeAtom implements AtomTask {
                     .report("report", "Artifact sizes", dir.toString(), "index.html");
         }
         return result;
-    }
-
-    private static List<PathMatcher> matchers(String spec) {
-        List<PathMatcher> matchers = new ArrayList<>();
-        for (String part : spec.split(",")) {
-            String trimmed = part.trim();
-            if (!trimmed.isEmpty()) {
-                matchers.add(FileSystems.getDefault().getPathMatcher("glob:"
-                        + (trimmed.contains("/") || trimmed.startsWith("**") ? trimmed : "**/" + trimmed)));
-            }
-        }
-        return matchers;
-    }
-
-    private static boolean matches(Path workspace, Path path, List<PathMatcher> matchers) {
-        Path relative = workspace.relativize(path);
-        for (PathMatcher matcher : matchers) {
-            if (matcher.matches(relative) || matcher.matches(java.nio.file.Path.of("_").resolve(relative)) || matcher.matches(path.getFileName())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private static String render(String pattern, List<Entry> entries, long total, int topN) {

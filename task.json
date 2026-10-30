@@ -1,7 +1,7 @@
 {
   "atomCode": "artifact-size",
   "name": "Artifact size",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Sums what the build produced, shows the largest files, and can gate on a budget.",
   "execution": {
     "packagePath": "artifact-size.jar",
