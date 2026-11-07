@@ -37,4 +37,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: artifact-size-atom
-          path: atom/dist/artifact-size/
+          path: atom/target/dist/artifact-size/
